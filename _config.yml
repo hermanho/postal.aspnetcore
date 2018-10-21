@@ -1,7 +1,5 @@
 baseurl: "/postal"
 
-pygments: true
-
 docs:
 - text: SMTP Configuration
   url: smtp-config.html
