@@ -98,6 +98,14 @@ namespace Postal
             return emailService.SendAsync(this);
         }
 
+        /// <summary>
+        /// Convenience method that sends this email asynchronously via a default EmailSender. 
+        /// </summary>
+        public Task SendAsync(IEmailSender emailSender)
+        {
+            return emailSender.SendEmailAsync(this);
+        }
+
         // Any dynamic property access is delegated to view data dictionary.
         // This makes for sweet looking syntax - thank you C#4!
 

@@ -17,6 +17,17 @@ namespace Postal.AspNetCore
             services.AddScoped<IEmailParser, EmailParser>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IEmailViewRender, EmailViewRender>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddPostalDefaultEmailSender(this IServiceCollection services)
+        {
+            if (!services.Any(sd => sd.ServiceType == typeof(IEmailSender)))
+            {
+                services.AddScoped<IEmailSender, EmailSender>();
+            }
+
             return services;
         }
     }
