@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.1](https://github.com/hermanho/postal.aspnetcore/compare/v2.6.0...v2.6.1) (2023-03-28)
+
+
+### Bug Fixes
+
+* migrate to github action ([8840647](https://github.com/hermanho/postal.aspnetcore/commit/8840647cce22c282481391baf969a8707e2b1922))
+
 ## [v2.7.1](https://github.com/hermanho/postal.aspnetcore/tree/v2.7.1) (2020-12-12)
 
 **Fixing:**
