@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.2-pre.2](https://github.com/hermanho/postal.aspnetcore/compare/v3.0.1-pre.2...v3.0.2-pre.2) (2023-03-29)
+
+
+### Bug Fixes
+
+* github workflow ([66b26bd](https://github.com/hermanho/postal.aspnetcore/commit/66b26bd35c54f17f2f2ab3cf4f929dfb8efe6b79))
+
 ## [3.0.1-pre.2](https://github.com/hermanho/postal.aspnetcore/compare/v3.0.0-pre.2...v3.0.1-pre.2) (2023-03-28)
 
 
