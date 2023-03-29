@@ -17,7 +17,6 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/hermanho/postal.aspnetcore</RepositoryUrl>
     <PackageProjectUrl>https://github.com/hermanho/postal.aspnetcore</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/hermanho/postal.aspnetcore</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>

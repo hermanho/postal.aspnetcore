@@ -6,6 +6,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  packages: write
 
 name: release-please
 
@@ -69,7 +70,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: | 
+          dotnet-version: |
             3.1.x
             6.0.x
       - name: Display dotnet version
@@ -88,6 +89,6 @@ jobs:
       - name: Create the package
         run: dotnet pack src/Postal.AspNetCore/Postal.AspNetCore.csproj -c Release
       - name: Publish the package to myget
-        run: dotnet nuget push src/Postal.AspNetCore/bin/Release/*.nupkg --source https://www.myget.org/F/herman-github/api/v2/package --api-key ${{secrets.NUGET_API_KEY}} --skip-duplicate
+        run: dotnet nuget push src/Postal.AspNetCore/bin/Release/*.nupkg --source https://www.myget.org/F/herman-github/api/v2/package --api-key ${{ secrets.MYGET_API_KEY }} --skip-duplicate
       - name: Publish the package to Github
-        run: dotnet nuget push src/Postal.AspNetCore/bin/Release/*.nupkg --source https://nuget.pkg.github.com/hermanho/index.json --api-key ${{secrets.GITHUB_TOKEN}} --skip-duplicate
+        run: dotnet nuget push src/Postal.AspNetCore/bin/Release/*.nupkg --source https://nuget.pkg.github.com/hermanho/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
