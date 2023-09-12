@@ -1,0 +1,17 @@
+{
+  "packages": {
+    ".": {
+      "package-name": "Postal.AspNetCore",
+      "release-type": "simple",
+      "prerelease": false,
+      "extra-files": [
+        {
+          "type": "xml",
+          "path": "Directory.Build.props",
+          "xpath": "//Project/PropertyGroup[1]/VersionPrefix"
+        }
+      ]
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}

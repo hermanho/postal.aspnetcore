@@ -5,34 +5,26 @@
   </PropertyGroup>
   <PropertyGroup>
     <TODAY>$([System.DateTime]::Now.ToString("yyyyMMdd-hhmmss"))</TODAY>
-    <BUILD_SOURCEVERSION_SHORT Condition=" '$(BUILD_SOURCEVERSION)' != '' ">$(BUILD_SOURCEVERSION.Substring(0,7))</BUILD_SOURCEVERSION_SHORT>
-    <InformationalVersion  Condition=" '$(BUILD_SOURCEVERSION_SHORT)' != '' ">$(InformationalVersion)git:$(BUILD_SOURCEVERSION_SHORT)</InformationalVersion>
+    <InformationalVersion  Condition=" '$(SHORT_SHA)' != '' ">$(InformationalVersion)git:$(SHORT_SHA)</InformationalVersion>
   </PropertyGroup>  
   <Choose>
     <When Condition=" '$(Prerelease)' != '' ">
       <PropertyGroup>
         <!-- Prerelease version numbers are MAJOR.MINOR.0-pre-build###### -->
         <VersionSuffix>$(Prerelease)-build$(BUILD_BUILDID.PadLeft(2, '0'))</VersionSuffix>
-        <VersionSuffix Condition=" '$(BUILD_SOURCEVERSION_SHORT)' != '' ">$(Prerelease)-$(BUILD_SOURCEVERSION_SHORT)</VersionSuffix>
+        <VersionSuffix Condition=" '$(SHORT_SHA)' != '' ">$(Prerelease)-$(SHORT_SHA)</VersionSuffix>
       </PropertyGroup>
     </When>
-    <When Condition=" '$(Release)' == 'true' ">
+    <When Condition=" '$(GITHUB_RELEASE)' == 'true' ">
       <PropertyGroup>
-        <!-- Release version numbers are MAJOR.MINOR.# -->
-        <VersionPrefix>$(VersionPrefix).$(BUILD_BUILDID.PadLeft(2, '0'))</VersionPrefix>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(TRAVIS_TAG)' != ''  and $(TRAVIS_TAG.StartsWith('v'))">
-      <PropertyGroup>
-        <!-- Release version numbers are MAJOR.MINOR.# -->       
         <VersionSuffix></VersionSuffix>
       </PropertyGroup>
     </When>
     <Otherwise>
       <PropertyGroup>
         <!-- append the build number if it is available -->
-        <VersionSuffix Condition=" '$(TRAVIS_BUILD_NUMBER)' != '' ">$(VersionSuffix)$(TRAVIS_BUILD_NUMBER)</VersionSuffix>
-        <VersionSuffix Condition=" '$(BUILD_SOURCEVERSION_SHORT)' != '' ">$(VersionSuffix)-$(BUILD_SOURCEVERSION_SHORT)</VersionSuffix>
+        <VersionSuffix Condition=" '$(GITHUB_RUN_NUMBER)' != '' ">$(VersionSuffix)$(GITHUB_RUN_NUMBER)</VersionSuffix>
+        <VersionSuffix Condition=" '$(SHORT_SHA)' != '' ">$(VersionSuffix)-$(SHORT_SHA)</VersionSuffix>
         <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">build$(TODAY)</VersionSuffix>
       </PropertyGroup>
     </Otherwise>
