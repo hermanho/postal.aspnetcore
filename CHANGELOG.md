@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.0](https://github.com/hermanho/postal.aspnetcore/compare/v3.0.0-pre.3...v3.0.0) (2023-09-12)
+
+
+### Features
+
+* Support .Net 6.0 ([5888d9d](https://github.com/hermanho/postal.aspnetcore/commit/5888d9dfb85f1bcb907c1563ab61a745b3705e3b))
+
 ## [3.0.0-pre.3](https://github.com/hermanho/postal.aspnetcore/compare/v3.0.2-pre.2...v3.0.0-pre.3) (2023-03-29)
 
 
