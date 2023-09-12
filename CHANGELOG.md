@@ -1,5 +1,26 @@
 # Changelog
 
+## [3.0.0](https://github.com/hermanho/postal.aspnetcore/compare/Postal.AspNetCore-v3.0.0-pre.3...Postal.AspNetCore-v3.0.0) (2023-09-12)
+
+
+### Features
+
+* Support .Net 6.0 ([fd3ad88](https://github.com/hermanho/postal.aspnetcore/commit/fd3ad88e1d3482510ab04d6f56e9fa2d59cd2d66))
+
+
+### Bug Fixes
+
+* 26 - Correctly build alternative view names from full path. ([f116bf4](https://github.com/hermanho/postal.aspnetcore/commit/f116bf4dcad3156a553aeec394ce1b83461582e7))
+* github action ([0c5b481](https://github.com/hermanho/postal.aspnetcore/commit/0c5b481197a6d2183986df35898bfb9e21cb4304))
+* github workflow ([66b26bd](https://github.com/hermanho/postal.aspnetcore/commit/66b26bd35c54f17f2f2ab3cf4f929dfb8efe6b79))
+* migrate to github action ([8840647](https://github.com/hermanho/postal.aspnetcore/commit/8840647cce22c282481391baf969a8707e2b1922))
+* workflow ([a806911](https://github.com/hermanho/postal.aspnetcore/commit/a8069118dd13a8ea712c0a730bf393ea41dee685))
+
+
+### Miscellaneous Chores
+
+* release 3.0.0-pre ([301a0f2](https://github.com/hermanho/postal.aspnetcore/commit/301a0f2df9502eb2d96eae8de6225e3c643aa7cb))
+
 ## [3.0.0-pre.3](https://github.com/hermanho/postal.aspnetcore/compare/v3.0.2-pre.2...v3.0.0-pre.3) (2023-03-29)
 
 
