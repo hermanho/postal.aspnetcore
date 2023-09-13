@@ -22,18 +22,18 @@ namespace Postal.AspNetCore
 
         private const string DefaultContentType = "text/html; charset=utf-8";
         private readonly ILogger<EmailViewResultExecutor> _logger;
-        private readonly IHttpResponseStreamWriterFactory _httpResponseStreamWriterFactory;
+        private readonly IHttpResponseStreamWriterFactory _writerFactory;
 
         IEmailViewRender Render { get; set; }
         IEmailParser Parser { get; set; }
 
         public EmailViewResultExecutor(ILoggerFactory loggerFactory,
-            IHttpResponseStreamWriterFactory httpResponseStreamWriterFactory,
+            IHttpResponseStreamWriterFactory writerFactory,
             IEmailViewRender render,
             IEmailParser parser = null)
         {
             _logger = loggerFactory.CreateLogger<EmailViewResultExecutor>();
-            _httpResponseStreamWriterFactory = httpResponseStreamWriterFactory;
+            _writerFactory = writerFactory;
             Render = render;
             Parser = parser ?? new EmailParser(Render);
         }
@@ -63,11 +63,16 @@ namespace Postal.AspNetCore
             var requestFeature = httpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpRequestFeature>();
             var query = httpContext.Request.Query;
             var format = query["format"];
-            using (var textWriter = _httpResponseStreamWriterFactory.CreateWriter(response.Body, Encoding.UTF8))
+            var sbBuf = new StringBuilder();
+            await using (var tw = new StringWriter(sbBuf))
             {
-                var contentType = await WriteEmailAsync(result.Email, textWriter, format);
+                httpContext.Response.ContentType = await WriteEmailAsync(result.Email, tw, format);
+                await tw.FlushAsync();
+            }
+            await using (var textWriter = _writerFactory.CreateWriter(response.Body, Encoding.UTF8))
+            {
+                await textWriter.WriteAsync(sbBuf.ToString());
                 await textWriter.FlushAsync();
-                httpContext.Response.ContentType = contentType;
             }
         }
 
