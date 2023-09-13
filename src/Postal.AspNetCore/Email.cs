@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Routing;
 using Postal.AspNetCore;
 
 namespace Postal
@@ -131,7 +132,21 @@ namespace Postal
             return viewName;
         }
 
-        public IList<IRouter> Routers { get; set; }
         public RequestPath RequestPath { get; set; }
+        internal HttpContextData HttpContextData { get; private set; }
+
+        public void CaptureHttpContext(HttpContext httpContext)
+        {
+            var endpoint = httpContext.GetEndpoint();
+            var routeValues = httpContext.Features.Get<IRouteValuesFeature>()?.RouteValues;
+            HttpContextData = new HttpContextData { Endpoint = endpoint, RouteValues = routeValues };
+
+            RequestPath = new RequestPath();
+            RequestPath.PathBase = httpContext.Request.PathBase.ToString();
+            RequestPath.Host = httpContext.Request.Host.ToString();
+            RequestPath.IsHttps = httpContext.Request.IsHttps;
+            RequestPath.Scheme = httpContext.Request.Scheme;
+            RequestPath.Method = httpContext.Request.Method;
+        }
     }
 }

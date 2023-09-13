@@ -50,17 +50,8 @@ namespace Postal
         public virtual async Task<string> RenderAsync(Email email, string viewName = null)
         {
             viewName = viewName ?? email.ViewName;
-            //var controllerContext = CreateControllerContext(email.AreaName, url);
-            //var view = CreateView(viewName, controllerContext);
 
             var routeData = new Microsoft.AspNetCore.Routing.RouteData();
-            if (email.Routers != null && email.Routers.Count > 0)
-            {
-                foreach (var r in email.Routers)
-                {
-                    routeData.Routers.Add(r);
-                }
-            }
             routeData.Values["controller"] = EmailViewDirectoryName;
             routeData.Values["page"] = EmailViewDirectoryName;
             if (!string.IsNullOrWhiteSpace(email.AreaName))
@@ -71,7 +62,7 @@ namespace Postal
 
             Dictionary<string, object> viewData = new Dictionary<string, object>();
             viewData[ImageEmbedder.ViewDataKey] = email.ImageEmbedder;            
-            var viewOutput = await _templateService.RenderTemplateAsync(routeData, viewName, email, viewData, true);
+            var viewOutput = await _templateService.RenderTemplateAsync(email.HttpContextData, routeData, viewName, email, viewData, true);
             viewData.Remove(ImageEmbedder.ViewDataKey);
             return viewOutput;
         }

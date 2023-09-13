@@ -30,7 +30,12 @@ namespace Postal
         /// <summary>
         /// Creates a new <see cref="EmailService"/>.
         /// </summary>
-        public EmailService(IEmailViewRender emailViewRenderer, IEmailParser emailParser, IOptions<EmailServiceOptions> options, ILogger<EmailService> logger)
+        public EmailService(
+            IEmailViewRender emailViewRenderer,
+            IEmailParser emailParser,
+            IOptions<EmailServiceOptions> options,
+            ILogger<EmailService> logger
+            )
         {
             this.emailViewRenderer = emailViewRenderer;
             this.emailParser = emailParser;

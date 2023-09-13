@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using Postal.AspNetCore.InternalClass;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,13 +53,16 @@ namespace Postal.AspNetCore
             _diagnosticListener = diagnosticListener;
         }
 
-        public async Task<string> RenderTemplateAsync<TViewModel>(RouteData routeData,
+        public async Task<string> RenderTemplateAsync<TViewModel>(HttpContextData httpContextData, RouteData routeData,
             string viewName, TViewModel viewModel, Dictionary<string, object> additonalViewDictionary = null, bool isMainPage = true) where TViewModel : IViewData
         {
-            var httpContext = new DefaultHttpContext
+            var httpContext = new DefaultHttpContext()
             {
-                RequestServices = _serviceProvider
+                RequestServices = _serviceProvider,
             };
+            httpContext.Features.Set<IEndpointFeature>(new EndpointFeature(httpContextData.Endpoint));
+            httpContext.Features.Set<IRouteValuesFeature>(new RouteValuesFeature() { RouteValues = httpContextData.RouteValues });
+
             if (viewModel.RequestPath != null)
             {
                 httpContext.Request.Host = HostString.FromUriComponent(viewModel.RequestPath.Host);
@@ -135,6 +141,7 @@ namespace Postal.AspNetCore
                 {
                     if (viewResult.Success)
                     {
+                        _logger.LogDebug($"View template found: {viewResult.View.Path}");
                         var viewContext = new ViewContext(actionContext, viewResult.View, viewDictionary,
                             tempDataDictionary, outputWriter, new HtmlHelperOptions());
 
@@ -142,6 +149,7 @@ namespace Postal.AspNetCore
                     }
                     else if (razorPageResult?.Page != null)
                     {
+                        _logger.LogDebug($"Razor page found: {razorPageResult?.Page.Path}");
                         var page = razorPageResult?.Page;
                         var razorView = new RazorView(
                             _viewEngine,

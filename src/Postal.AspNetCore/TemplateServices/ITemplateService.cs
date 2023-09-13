@@ -17,7 +17,7 @@ namespace Postal.AspNetCore
         /// <param name="filename">Filename of the template to render</param>
         /// <param name="viewModel">View model to use for rendering the template</param>
         /// <returns>Returns the rendered template content</returns>
-        Task<string> RenderTemplateAsync<TViewModel>(RouteData routeData, string viewName, TViewModel viewModel,
+        Task<string> RenderTemplateAsync<TViewModel>(HttpContextData HttpContextData, RouteData routeData, string viewName, TViewModel viewModel,
             Dictionary<string, object> additonalViewDictionary = null, bool isMainPage = true) where TViewModel : IViewData;
     }
 }
