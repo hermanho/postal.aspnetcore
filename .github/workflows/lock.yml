@@ -1,0 +1,28 @@
+name: 'Lock Threads'
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: lock
+
+jobs:
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/lock-threads@v4
+        with:
+          issue-inactive-days: '60'
+          add-issue-labels: 'inactive'
+          issue-lock-reason: ''
+          pr-inactive-days: '90'
+          exclude-any-pr-labels: 'wip'
+          add-pr-labels: 'inactive'
+          pr-lock-reason: ''
+          log-output: true
