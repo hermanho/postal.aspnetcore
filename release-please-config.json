@@ -4,6 +4,7 @@
       "package-name": "Postal.AspNetCore",
       "release-type": "simple",
       "prerelease": false,
+      "include-component-in-tag": false,
       "extra-files": [
         {
           "type": "xml",
