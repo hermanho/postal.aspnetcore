@@ -31,4 +31,5 @@
     <None Update="postal.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup></Project>
+  </ItemGroup>
+</Project>

@@ -60,8 +60,11 @@ namespace Postal.AspNetCore
             {
                 RequestServices = _serviceProvider,
             };
-            httpContext.Features.Set<IEndpointFeature>(new EndpointFeature(httpContextData.Endpoint));
-            httpContext.Features.Set<IRouteValuesFeature>(new RouteValuesFeature() { RouteValues = httpContextData.RouteValues });
+            if (httpContextData != null)
+            {
+                httpContext.Features.Set<IEndpointFeature>(new EndpointFeature(httpContextData.Endpoint));
+                httpContext.Features.Set<IRouteValuesFeature>(new RouteValuesFeature() { RouteValues = httpContextData.RouteValues });
+            }
 
             if (viewModel.RequestPath != null)
             {

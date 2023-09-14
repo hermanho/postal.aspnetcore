@@ -100,7 +100,7 @@ namespace Postal
                 TemplateString = templateString;
             }
 
-            public string Path => throw new NotImplementedException();
+            public string Path => "FakePathUnitTest";
 
             public Func<ViewContext, string> TemplateString { get; private set; }
 
