@@ -1,10 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Postal.Tests", "src\Postal.Tests\Postal.Tests.csproj", "{8F7B0DA6-277A-40A8-9C2A-6100112D35F6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Postal.AspNetCore", "src\Postal.AspNetCore\Postal.AspNetCore.csproj", "{95EE9CE4-5C7E-4D69-99C2-CB131C8CE83E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postal.Tests.Integration", "test\Postal.Tests.Integration\Postal.Tests.Integration.csproj", "{6DCE1967-27EC-45B0-AB2E-46315C9DE5E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +22,10 @@ Global
 		{95EE9CE4-5C7E-4D69-99C2-CB131C8CE83E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{95EE9CE4-5C7E-4D69-99C2-CB131C8CE83E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{95EE9CE4-5C7E-4D69-99C2-CB131C8CE83E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DCE1967-27EC-45B0-AB2E-46315C9DE5E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DCE1967-27EC-45B0-AB2E-46315C9DE5E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DCE1967-27EC-45B0-AB2E-46315C9DE5E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DCE1967-27EC-45B0-AB2E-46315C9DE5E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -28,9 +28,9 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build -c Release Postal.sln
+        run: dotnet build Postal.sln
       - name: Test
-        run: dotnet test -c Release --logger "trx;LogFileName=TestResults-${{ matrix.dotnet-version }}.trx"
+        run: dotnet test --logger "trx;LogFileName=TestResults-${{ matrix.dotnet-version }}.trx"
       - name: Upload dotnet test results
         uses: actions/upload-artifact@v3
         with:

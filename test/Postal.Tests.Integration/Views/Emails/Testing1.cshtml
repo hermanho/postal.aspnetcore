@@ -1,0 +1,12 @@
+﻿@section EmailHeader{
+Subject: Email testing subject
+}
+<html>
+<body>
+    Hello @ViewBag.Name
+    <br />
+    Index url is @Url.ActionLink("Index", "Home")
+    <br />
+    Dummy url is @Url.ActionLink("Dummy", "Second")
+</body>
+</html>
