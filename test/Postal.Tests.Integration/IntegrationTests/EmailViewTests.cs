@@ -7,14 +7,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 namespace Postal.Tests.Integration.IntegrationTests;
 
 public class EmailViewTests :
-        IClassFixture<WebApplicationFactory<Program>>
+        IClassFixture<CustomWebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
-    private readonly WebApplicationFactory<Program>
+    private readonly CustomWebApplicationFactory<Program>
         _factory;
 
     public EmailViewTests(
-        WebApplicationFactory<Program> factory)
+        CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         var server = factory.Services.GetRequiredService<IServer>();
