@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.1.0](https://github.com/hermanho/postal.aspnetcore/compare/Postal.AspNetCore-v3.0.0...Postal.AspNetCore-v3.1.0) (2023-09-14)
+
+
+### Features
+
+* update dependency ([4e23072](https://github.com/hermanho/postal.aspnetcore/commit/4e23072ac56f2e2f034d343cb29919003790e1f0))
+* use endpoint routing ([c4d6e98](https://github.com/hermanho/postal.aspnetcore/commit/c4d6e98636fc3c2612d8c8384b34ad4b5b3084ec))
+
+
+### Bug Fixes
+
+* cicd ([1f7a908](https://github.com/hermanho/postal.aspnetcore/commit/1f7a90855a523b30bdd55555f21514b539dbc726))
+* Headers are read-only, response has already started ([d8ff521](https://github.com/hermanho/postal.aspnetcore/commit/d8ff5211a2621bdd78684417e2724770b2269c5e))
+* null check ([6ff20eb](https://github.com/hermanho/postal.aspnetcore/commit/6ff20eb44c18525152e7b29dbe1fc15373a95d49))
+* remove tools directory ([3e69864](https://github.com/hermanho/postal.aspnetcore/commit/3e6986450c82438e8d0c88088bbb21b58b2394cf))
+* test case ([1d44737](https://github.com/hermanho/postal.aspnetcore/commit/1d44737ec4c79af17dfacb21b0b1bb89aa3958b4))
+
 ## [3.0.0](https://github.com/hermanho/postal.aspnetcore/compare/Postal.AspNetCore-v3.0.0-pre.3...Postal.AspNetCore-v3.0.0) (2023-09-12)
 
 
