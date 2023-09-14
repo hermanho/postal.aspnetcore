@@ -1,8 +1,14 @@
-name: Build & Test
+name: pull-request
 
 on:
   pull_request:
     branches: [ main ]
+
+permissions:
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
 
 jobs:
   test:
@@ -33,11 +39,15 @@ jobs:
         run: dotnet test --logger "trx;LogFileName=TestResults-${{ matrix.dotnet-version }}.trx"
       - name: Upload dotnet test results
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: dotnet-results-${{ matrix.dotnet-version }}
           path: "./**/TestResults/TestResults-${{ matrix.dotnet-version }}.trx"
-        # Use always() to always run this step to publish test results when there are test failures
-        if: ${{ always() }}
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: "./**/TestResults/TestResults-${{ matrix.dotnet-version }}.trx"
 
   test-pack:
     runs-on: ubuntu-latest
