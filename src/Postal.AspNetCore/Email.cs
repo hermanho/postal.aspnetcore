@@ -40,10 +40,12 @@ namespace Postal
         {
         }
 
-        public Email(string viewName, IModelMetadataProvider modelMetadataProvider): this()
+        public Email(string viewName, IModelMetadataProvider modelMetadataProvider) : this()
         {
             if (viewName == null) throw new ArgumentNullException(nameof(viewName));
             if (string.IsNullOrWhiteSpace(viewName)) throw new ArgumentException("View name cannot be empty.", "viewName");
+
+            ViewName = viewName;
         }
 
         /// <summary>

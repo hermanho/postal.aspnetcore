@@ -44,7 +44,7 @@ public class EmailViewTests :
         var content = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("http://localhost:7060/Second/Dummy", content);
+        Assert.Contains("http://localhost:7060/Privacy", content);
     }
 }
 

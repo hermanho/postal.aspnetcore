@@ -9,6 +9,6 @@ public class CustomWebApplicationFactory<TProgram>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         //builder.UseContentRoot(AppContext.BaseDirectory);
-        //builder.UseSolutionRelativeContentRoot()
+        builder.UseSolutionRelativeContentRoot("test/Postal.Tests.Integration");
     }
 }
