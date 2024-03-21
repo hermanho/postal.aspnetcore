@@ -15,18 +15,6 @@ namespace Postal
     /// </summary>
     public class EmailService : IEmailService
     {
-        /// <summary>Creates a new <see cref="EmailService"/>, using the given view engines.</summary>
-        [Obsolete]
-        public static EmailService Create(IServiceProvider serviceProvider, Func<SmtpClient> createSmtpClient = null)
-        {
-            var emailViewRender = serviceProvider.GetRequiredService<IEmailViewRender>();
-            var emailParser = serviceProvider.GetRequiredService<IEmailParser>();
-            var options = Options.Create(new EmailServiceOptions() { CreateSmtpClient = createSmtpClient });
-            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger<EmailService>();
-            return new EmailService(emailViewRender, emailParser, options, logger);
-        }
-
         /// <summary>
         /// Creates a new <see cref="EmailService"/>.
         /// </summary>
@@ -101,12 +89,18 @@ namespace Postal
         /// <returns>A <see cref="MailMessage"/> containing the rendered email.</returns>
         public async Task<MailMessage> CreateMailMessageAsync(Email email)
         {
-            var rawEmailString = await emailViewRenderer.RenderAsync(email);
+            var imageEmbedder = new ImageEmbedder();
+            var rawEmailString = await emailViewRenderer.RenderAsync(email, null, imageEmbedder);
             emailParser = new EmailParser(emailViewRenderer);
-            var mailMessage = await emailParser.ParseAsync(rawEmailString, email);
+            var mailMessage = await emailParser.ParseAsync(rawEmailString, email, imageEmbedder);
             if ((mailMessage.From == null || mailMessage.From.Address == null) && this.options.FromAddress != null)
             {
                 mailMessage.From = new MailAddress(this.options.FromAddress);
+            }
+            mailMessage.BodyTransferEncoding = System.Net.Mime.TransferEncoding.Base64;
+            if (options.BodyTransferEncoding != null)
+            {
+                mailMessage.BodyTransferEncoding = (System.Net.Mime.TransferEncoding)options.BodyTransferEncoding;
             }
             return mailMessage;
         }

@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Net.Mail;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Routing;
 using Postal.AspNetCore;
 
 namespace Postal
@@ -17,6 +19,7 @@ namespace Postal
     /// ViewBag property of a Controller. Any dynamic property access is mapped to the
     /// view data dictionary.
     /// </summary>
+    [DataContract]
     public class Email : DynamicObject, IViewData
     {
         /// <summary>Create an Email where the ViewName is derived from the name of the class.</summary>
@@ -25,9 +28,8 @@ namespace Postal
         {
             Attachments = new List<Attachment>();
             ViewName = DeriveViewNameFromClassName();
-            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary());
-            ViewData.Model = this;
-            ImageEmbedder = new ImageEmbedder();
+            ViewData = new Dictionary<string, object>();
+            RequestPath = new RequestPath();
         }
 
         /// <summary>
@@ -38,16 +40,10 @@ namespace Postal
         {
         }
 
-        public Email(string viewName, IModelMetadataProvider modelMetadataProvider)
+        public Email(string viewName, IModelMetadataProvider modelMetadataProvider): this()
         {
             if (viewName == null) throw new ArgumentNullException(nameof(viewName));
             if (string.IsNullOrWhiteSpace(viewName)) throw new ArgumentException("View name cannot be empty.", "viewName");
-
-            Attachments = new List<Attachment>();
-            ViewName = viewName;
-            ViewData = new ViewDataDictionary(modelMetadataProvider, new ModelStateDictionary());
-            ViewData.Model = this;
-            ImageEmbedder = new ImageEmbedder();
         }
 
         /// <summary>
@@ -63,24 +59,29 @@ namespace Postal
         /// <summary>
         /// The name of the view containing the email template.
         /// </summary>
+        [DataMember]
         public string ViewName { get; set; }
 
         /// <summary>
         /// The name of the area containing the email template.
         /// </summary>
-        public string AreaName { get; set; }
+        [DataMember]
+        public string? AreaName { get; set; }
 
         /// <summary>
         /// The view data to pass to the view.
         /// </summary>
-        public ViewDataDictionary ViewData { get; set; }
+        [DataMember]
+        public Dictionary<string, object> ViewData { get; set; }
 
         /// <summary>
         /// The attachments to send with the email.
         /// </summary>
+        [DataMember]
         public List<Attachment> Attachments { get; set; }
 
-        internal ImageEmbedder ImageEmbedder { get; private set; }
+        [DataMember]
+        public RequestPath RequestPath { get; set; }
 
         /// <summary>
         /// Adds an attachment to the email.
@@ -132,16 +133,13 @@ namespace Postal
             return viewName;
         }
 
-        public RequestPath RequestPath { get; set; }
-        internal HttpContextData HttpContextData { get; private set; }
 
         public void CaptureHttpContext(HttpContext httpContext)
         {
-            var endpoint = httpContext.GetEndpoint();
             var routeValues = httpContext.Features.Get<IRouteValuesFeature>()?.RouteValues;
-            HttpContextData = new HttpContextData { Endpoint = endpoint, RouteValues = routeValues };
 
             RequestPath = new RequestPath();
+            RequestPath.Path = httpContext.Request.Path.ToString();
             RequestPath.PathBase = httpContext.Request.PathBase.ToString();
             RequestPath.Host = httpContext.Request.Host.ToString();
             RequestPath.IsHttps = httpContext.Request.IsHttps;

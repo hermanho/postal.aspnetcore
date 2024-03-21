@@ -32,14 +32,14 @@ namespace Postal
         /// <param name="emailViewOutput">The email view output.</param>
         /// <param name="email">The <see cref="Email"/> used to generate the output.</param>
         /// <returns>A <see cref="MailMessage"/> containing the email headers and content.</returns>
-        public async Task<MailMessage> ParseAsync(string emailViewOutput, Email email)
+        public async Task<MailMessage> ParseAsync(string emailViewOutput, Email email, ImageEmbedder? imageEmbedder = null)
         {
             var message = new MailMessage();
-            await InitializeMailMessageAsync(message, emailViewOutput, email);
+            await InitializeMailMessageAsync(message, emailViewOutput, email, imageEmbedder);
             return message;
         }
 
-        private async Task InitializeMailMessageAsync(MailMessage message, string emailViewOutput, Email email)
+        private async Task InitializeMailMessageAsync(MailMessage message, string emailViewOutput, Email email, ImageEmbedder? imageEmbedder = null)
         {
             if (string.IsNullOrWhiteSpace(emailViewOutput))
             {
@@ -47,15 +47,15 @@ namespace Postal
             }
             using (var reader = new StringReader(emailViewOutput))
             {
-                await ParserUtils.ParseHeadersAsync(reader, (key, value) => ProcessHeaderAsync(key, value, message, email));
+                await ParserUtils.ParseHeadersAsync(reader, (key, value) => ProcessHeaderAsync(key, value, message, email, imageEmbedder));
                 AssignCommonHeaders(message, email);
                 if (message.AlternateViews.Count == 0)
                 {
                     var messageBody = reader.ReadToEnd().Trim();
-                    if (email.ImageEmbedder.HasImages)
+                    if (imageEmbedder != null && imageEmbedder.HasImages)
                     {
                         var view = AlternateView.CreateAlternateViewFromString(messageBody, new ContentType("text/html"));
-                        email.ImageEmbedder.AddImagesToView(view);
+                        imageEmbedder.AddImagesToView(view);
                         message.AlternateViews.Add(view);
                         message.Body = "Plain text not available.";
                         message.IsBodyHtml = false;
@@ -112,19 +112,29 @@ namespace Postal
         private void AssignCommonHeader<T>(Email email, string header, Action<T> assign)
             where T : class
         {
-            object value;
+            object? value;
             if (email.ViewData.TryGetValue(header, out value))
             {
-                var typedValue = value as T;
-                if (typedValue != null) assign(typedValue);
+                if (value is T typedValue)
+                {
+                    assign(typedValue);
+                    return;
+                }
+            }
+            var foundKV = email.ViewData.Where(x => String.Equals(x.Key, header, StringComparison.OrdinalIgnoreCase) && x.Value is T typedValue);
+            if (foundKV.Any())
+            {
+                var val = foundKV.First();
+                assign((T)val.Value);
+                return;
             }
         }
 
-        private async Task ProcessHeaderAsync(string key, string value, MailMessage message, Email email)
+        private async Task ProcessHeaderAsync(string key, string value, MailMessage message, Email email, ImageEmbedder? imageEmbedder)
         {
             if (IsAlternativeViewsHeader(key))
             {
-                foreach (var view in CreateAlternativeViews(value, email))
+                foreach (var view in CreateAlternativeViews(value, email, imageEmbedder))
                 {
                     message.AlternateViews.Add(await view);
                 }
@@ -135,17 +145,17 @@ namespace Postal
             }
         }
 
-        private IEnumerable<Task<AlternateView>> CreateAlternativeViews(string deliminatedViewNames, Email email)
+        private IEnumerable<Task<AlternateView>> CreateAlternativeViews(string deliminatedViewNames, Email email, ImageEmbedder? imageEmbedder)
         {
             var viewNames = deliminatedViewNames.Split(new[] { ',', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries);
-            return viewNames.Select(v => CreateAlternativeView(email, v)).ToList();
+            return viewNames.Select(v => CreateAlternativeView(email, v, imageEmbedder)).ToList();
         }
 
-        private async Task<AlternateView> CreateAlternativeView(Email email, string alternativeViewName)
+        private async Task<AlternateView> CreateAlternativeView(Email email, string alternativeViewName, ImageEmbedder? imageEmbedder)
         {
             var fullViewName = GetAlternativeViewName(email, alternativeViewName);
-            var output = await alternativeViewRenderer.RenderAsync(email, fullViewName);
-            string contentType;
+            var output = await alternativeViewRenderer.RenderAsync(email, fullViewName, imageEmbedder);
+            string? contentType;
             string body;
             using (var reader = new StringReader(output))
             {
@@ -179,7 +189,10 @@ namespace Postal
                 // A different charset can be specified in the Content-Type header.
                 // e.g. Content-Type: text/html; charset=utf-8
             }
-            email.ImageEmbedder.AddImagesToView(alternativeView);
+            if (imageEmbedder != null)
+            {
+                imageEmbedder.AddImagesToView(alternativeView);
+            }
             return alternativeView;
         }
 
@@ -206,9 +219,9 @@ namespace Postal
             return stream;
         }
 
-        private string ParseHeadersForContentType(StringReader reader)
+        private string? ParseHeadersForContentType(StringReader reader)
         {
-            string contentType = null;
+            string? contentType = null;
             ParserUtils.ParseHeaders(reader, (key, value) =>
             {
                 if (key.Equals("content-type", StringComparison.OrdinalIgnoreCase))

@@ -3,13 +3,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.Logging;
-using Postal.AspNetCore.InternalClass;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,7 +21,7 @@ using System.Threading.Tasks;
 
 namespace Postal.AspNetCore
 {
-    public class TemplateService : ITemplateService
+    public partial class TemplateService : ITemplateService
     {
         public static readonly string ViewExtension = ".cshtml";
 
@@ -31,6 +33,8 @@ namespace Postal.AspNetCore
         private readonly IRazorPageActivator _pageActivator;
         private readonly System.Text.Encodings.Web.HtmlEncoder _htmlEncoder;
         private readonly DiagnosticListener _diagnosticListener;
+        private readonly IUrlHelperFactory _urlHelperFactory;
+
 
         public TemplateService(
             ILogger<TemplateService> logger,
@@ -40,7 +44,8 @@ namespace Postal.AspNetCore
             ITempDataProvider tempDataProvider,
             Microsoft.Extensions.Hosting.IHostEnvironment hostingEnvironment,
             System.Text.Encodings.Web.HtmlEncoder htmlEncoder,
-            DiagnosticListener diagnosticListener
+            DiagnosticListener diagnosticListener,
+            IUrlHelperFactory urlHelperFactory
             )
         {
             _logger = logger;
@@ -51,55 +56,63 @@ namespace Postal.AspNetCore
             _pageActivator = pageActivator;
             _htmlEncoder = htmlEncoder;
             _diagnosticListener = diagnosticListener;
+            _urlHelperFactory = urlHelperFactory;
         }
 
-        public async Task<string> RenderTemplateAsync<TViewModel>(HttpContextData httpContextData, RouteData routeData,
-            string viewName, TViewModel viewModel, Dictionary<string, object> additonalViewDictionary = null, bool isMainPage = true) where TViewModel : IViewData
+        [LoggerMessage(
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "RequestPath != null\nRequestPath:{requestPath}\nHttpRequest:{request}")]
+        public partial void LogRequestPath(RequestPath requestPath, HttpRequest request);
+
+        [LoggerMessage(
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "_hostingEnvironment is {type} -> GetView from {property}: {value}")]
+        public partial void LogHostEnvironment(string type, string property, string value);
+
+        public async Task<string> RenderTemplateAsync<TViewModel>(RouteData routeData,
+            string viewName, TViewModel viewModel, Dictionary<string, object?>? additonalViewDictionary = null, bool isMainPage = true) where TViewModel : IViewData
         {
             var httpContext = new DefaultHttpContext()
             {
                 RequestServices = _serviceProvider,
             };
-            if (httpContextData != null)
-            {
-                httpContext.Features.Set<IEndpointFeature>(new EndpointFeature(httpContextData.Endpoint));
-                httpContext.Features.Set<IRouteValuesFeature>(new RouteValuesFeature() { RouteValues = httpContextData.RouteValues });
-            }
 
             if (viewModel.RequestPath != null)
             {
                 httpContext.Request.Host = HostString.FromUriComponent(viewModel.RequestPath.Host);
                 httpContext.Request.Scheme = viewModel.RequestPath.Scheme;
+                httpContext.Request.Path = viewModel.RequestPath.Path != null ? PathString.FromUriComponent(viewModel.RequestPath.Path) : null;
                 httpContext.Request.PathBase = PathString.FromUriComponent(viewModel.RequestPath.PathBase);
 
-                _logger.LogDebug($"RequestPath != null");
-                _logger.LogTrace($"\tHost: {viewModel.RequestPath.Host} -> {httpContext.Request.Host}");
-                _logger.LogTrace($"\tScheme: {viewModel.RequestPath.Scheme}");
-                _logger.LogTrace($"\tPathBase: {viewModel.RequestPath.PathBase} -> {httpContext.Request.PathBase}");
+                this.LogRequestPath(viewModel.RequestPath, httpContext.Request);
             }
 
             var actionDescriptor = new ActionDescriptor
             {
-                RouteValues = routeData.Values.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
+                RouteValues = routeData.Values.ToDictionary(kv => kv.Key, kv => kv.Value!.ToString())
             };
 
+            httpContext.SetEndpoint(new Endpoint(r => Task.CompletedTask, null, null));
             var actionContext = new ActionContext(httpContext, routeData, actionDescriptor);
+            this._urlHelperFactory.GetUrlHelper(actionContext);
 
             using (var outputWriter = new StringWriter())
             {
-                Microsoft.AspNetCore.Mvc.ViewEngines.ViewEngineResult viewResult = null;
+                Microsoft.AspNetCore.Mvc.ViewEngines.ViewEngineResult? viewResult = null;
                 RazorPageResult? razorPageResult = null;
                 if (IsApplicationRelativePath(viewName) || IsRelativePath(viewName))
                 {
                     _logger.LogDebug($"Relative path");
                     if (_hostingEnvironment is Microsoft.AspNetCore.Hosting.IWebHostEnvironment webHostEnvironment)
                     {
-                        _logger.LogDebug($"_hostingEnvironment is IWebHostEnvironment -> GetView from WebRootPath: {webHostEnvironment.WebRootPath}");
+                        this.LogHostEnvironment("IWebHostEnvironment", "WebRootPath", webHostEnvironment.WebRootPath);
                         viewResult = _viewEngine.GetView(webHostEnvironment.WebRootPath, viewName, isMainPage);
                     }
                     else
                     {
-                        _logger.LogDebug($"_hostingEnvironment is IHostEnvironment -> GetView from ContentRootPath: {_hostingEnvironment.ContentRootPath}");
+                        this.LogHostEnvironment("IHostEnvironment", "ContentRootPath", _hostingEnvironment.ContentRootPath);
                         viewResult = _viewEngine.GetView(_hostingEnvironment.ContentRootPath, viewName, isMainPage);
                     }
                 }
@@ -107,10 +120,27 @@ namespace Postal.AspNetCore
                 {
                     _logger.LogDebug($"Not a relative path");
                     viewResult = _viewEngine.FindView(actionContext, viewName, isMainPage);
-                    razorPageResult = _viewEngine.FindPage(actionContext, viewName);
+                }
+                razorPageResult = _viewEngine.FindPage(actionContext, viewName);
+
+                if ((viewResult == null || !viewResult.Success) && (razorPageResult == null || (razorPageResult != null && razorPageResult?.Page == null)))
+                {
+                    var searchedLocations = viewResult?.SearchedLocations ?? [];
+                    if (razorPageResult != null && razorPageResult?.SearchedLocations != null)
+                    {
+                        searchedLocations = searchedLocations.Union(razorPageResult?.SearchedLocations!);
+                    }
+                    _logger.LogError($"Failed to render template {viewName} because it was not found. \r\nThe following locations are searched: \r\n{string.Join("\r\n", searchedLocations)}");
+                    throw new TemplateServiceException($"Failed to render template {viewName} because it was not found. \r\nThe following locations are searched: \r\n{string.Join("\r\n", searchedLocations)}");
                 }
 
-                var viewDictionary = new ViewDataDictionary<TViewModel>(viewModel.ViewData, viewModel);
+                var viewDictionary = new ViewDataDictionary<TViewModel>(new EmptyModelMetadataProvider(), new ModelStateDictionary());
+                foreach (var kv in viewModel.ViewData)
+                {
+                    viewDictionary.Add(kv.Key, kv.Value);
+                }
+                viewDictionary.Model = viewModel;
+
                 if (additonalViewDictionary != null)
                 {
                     _logger.LogDebug($"additonalViewDictionary count: {additonalViewDictionary.Count}");
@@ -129,20 +159,9 @@ namespace Postal.AspNetCore
 
                 var tempDataDictionary = new TempDataDictionary(httpContext, _tempDataProvider);
 
-                if (!viewResult.Success && (razorPageResult == null || (razorPageResult != null && razorPageResult?.Page == null)))
-                {
-                    var searchedLocations = viewResult.SearchedLocations;
-                    if (razorPageResult?.SearchedLocations != null)
-                    {
-                        searchedLocations = viewResult.SearchedLocations.Union(razorPageResult?.SearchedLocations);
-                    }
-                    _logger.LogError($"Failed to render template {viewName} because it was not found. \r\nThe following locations are searched: \r\n{string.Join("\r\n", searchedLocations)}");
-                    throw new TemplateServiceException($"Failed to render template {viewName} because it was not found. \r\nThe following locations are searched: \r\n{string.Join("\r\n", searchedLocations)}");
-                }
-
                 try
                 {
-                    if (viewResult.Success)
+                    if (viewResult!.Success)
                     {
                         _logger.LogDebug($"View template found: {viewResult.View.Path}");
                         var viewContext = new ViewContext(actionContext, viewResult.View, viewDictionary,
@@ -152,8 +171,8 @@ namespace Postal.AspNetCore
                     }
                     else if (razorPageResult?.Page != null)
                     {
-                        _logger.LogDebug($"Razor page found: {razorPageResult?.Page.Path}");
-                        var page = razorPageResult?.Page;
+                        var page = razorPageResult?.Page!;
+                        _logger.LogDebug($"Razor page found: {page.Path}");
                         var razorView = new RazorView(
                             _viewEngine,
                             _pageActivator,
@@ -166,7 +185,7 @@ namespace Postal.AspNetCore
                         var viewContext = new ViewContext(actionContext, razorView, viewDictionary,
                             tempDataDictionary, outputWriter, new HtmlHelperOptions());
 
-                        await viewResult.View.RenderAsync(viewContext);
+                        await viewResult.View!.RenderAsync(viewContext);
                         var pageNormal = ((Page)page);
                         pageNormal.PageContext = new PageContext();
                         pageNormal.ViewContext = viewContext;
