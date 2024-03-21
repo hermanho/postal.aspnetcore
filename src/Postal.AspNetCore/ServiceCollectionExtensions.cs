@@ -35,7 +35,7 @@ namespace Postal.AspNetCore
 
             int? port = default;
             bool enableSsl = default;
-            string fromAddress = default;
+            string? fromAddress = default;
 
             var portGroup = match.Groups["port"];
 
@@ -46,19 +46,22 @@ namespace Postal.AspNetCore
 
             var optionCaptures = match.Groups["option"].Captures;
 
-            foreach (Capture optionCapture in optionCaptures)
+            foreach (Capture? optionCapture in optionCaptures)
             {
-                var parts = optionCapture.Value.Split(new[] { '=' }, 2);
-
-                switch (parts[0])
+                if (optionCapture?.Value != null)
                 {
-                    case "enableSsl":
-                        bool.TryParse(parts[1], out enableSsl);
-                        break;
+                    var parts = optionCapture.Value.Split(new[] { '=' }, 2);
 
-                    case "fromAddress":
-                        fromAddress = parts[1];
-                        break;
+                    switch (parts[0])
+                    {
+                        case "enableSsl":
+                            bool.TryParse(parts[1], out enableSsl);
+                            break;
+
+                        case "fromAddress":
+                            fromAddress = parts[1];
+                            break;
+                    }
                 }
             }
 

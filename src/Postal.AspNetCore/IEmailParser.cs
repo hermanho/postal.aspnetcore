@@ -15,6 +15,6 @@ namespace Postal
         /// <param name="emailViewOutput">The string output of the email view.</param>
         /// <param name="email">The email data used to render the view.</param>
         /// <returns>The created <see cref="MailMessage"/></returns>
-        Task<MailMessage> ParseAsync(string emailViewOutput, Email email);
+        Task<MailMessage> ParseAsync(string emailViewOutput, Email email, ImageEmbedder? imageEmbedder = null);
     }
 }

@@ -29,7 +29,11 @@ namespace Postal
                 var webRootPath = html.ViewContext.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath;
                 imagePathOrUrl = webRootPath + System.IO.Path.DirectorySeparatorChar + imagePathOrUrl.Replace('/', System.IO.Path.DirectorySeparatorChar).Replace('\\', System.IO.Path.DirectorySeparatorChar);
             }
-            var imageEmbedder = (ImageEmbedder)html.ViewData[ImageEmbedder.ViewDataKey];
+            var imageEmbedder = (ImageEmbedder?)html.ViewData[ImageEmbedder.ViewDataKey];
+            if (imageEmbedder == null)
+            {
+                throw new ArgumentException("ImageEmbedder is not initialized");
+            }
             var resource = await imageEmbedder.ReferenceImageAsync(imagePathOrUrl);
             return new HtmlString(string.Format("<img src=\"cid:{0}\" alt=\"{1}\" style=\"{2}\"/>", resource.ContentId, html.Encode(alt), html.Encode(style)));
         }

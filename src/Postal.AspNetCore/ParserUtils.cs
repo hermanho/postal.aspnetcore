@@ -17,7 +17,7 @@ namespace Postal
         public static void ParseHeaders(TextReader reader, Action<string, string> useKeyAndValue)
         {
             string line;
-            while (string.IsNullOrWhiteSpace(line = reader.ReadLine()))
+            while (string.IsNullOrWhiteSpace(line = reader.ReadLine()!))
             {
                 // Skip over any empty lines before the headers.
             }
@@ -34,13 +34,13 @@ namespace Postal
                 {
                     useKeyAndValue(key, value);
                 }
-            } while (!string.IsNullOrWhiteSpace(line = reader.ReadLine()));
+            } while (!string.IsNullOrWhiteSpace(line = reader.ReadLine()!));
         }
 
         public static async Task ParseHeadersAsync(TextReader reader, Func<string, string, Task> useKeyAndValue)
         {
             string line;
-            while (string.IsNullOrWhiteSpace(line = reader.ReadLine()))
+            while (string.IsNullOrWhiteSpace(line = reader.ReadLine()!))
             {
                 // Skip over any empty lines before the headers.
             }
@@ -57,7 +57,7 @@ namespace Postal
                 {
                     await useKeyAndValue(key, value);
                 }
-            } while (!string.IsNullOrWhiteSpace(line = reader.ReadLine()));
+            } while (!string.IsNullOrWhiteSpace(line = reader.ReadLine()!));
         }
     }
 }

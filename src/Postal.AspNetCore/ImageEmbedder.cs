@@ -6,6 +6,7 @@ using System.Net.Mime;
 using System.Net;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Runtime.Serialization;
 
 namespace Postal
 {
@@ -75,9 +76,9 @@ namespace Postal
         /// <param name="imagePathOrUrl">The image path or URL.</param>
         /// <param name="contentType">The content type of the image e.g. "image/png". If null, then content type is determined from the file name extension.</param>
         /// <returns>A <see cref="LinkedResource"/> representing the embedded image.</returns>
-        public async Task<LinkedResource> ReferenceImageAsync(string imagePathOrUrl, string contentType = null)
+        public async Task<LinkedResource> ReferenceImageAsync(string imagePathOrUrl, string? contentType = null)
         {
-            LinkedResource resource = null;
+            LinkedResource? resource;
             if (images.TryGetValue(imagePathOrUrl, out resource)) return resource;
 
             resource = await createLinkedResourceAsync(imagePathOrUrl);
@@ -92,7 +93,7 @@ namespace Postal
             return resource;
         }
 
-        string DetermineContentType(string pathOrUrl)
+        string? DetermineContentType(string pathOrUrl)
         {
             if (pathOrUrl == null) throw new ArgumentNullException(nameof(pathOrUrl));
 
