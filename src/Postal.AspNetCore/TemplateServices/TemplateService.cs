@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Postal.AspNetCore
@@ -125,13 +126,23 @@ namespace Postal.AspNetCore
 
                 if ((viewResult == null || !viewResult.Success) && (razorPageResult == null || (razorPageResult != null && razorPageResult?.Page == null)))
                 {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"Failed to render template {viewName} because it was not found.");
                     var searchedLocations = viewResult?.SearchedLocations ?? [];
                     if (razorPageResult != null && razorPageResult?.SearchedLocations != null)
                     {
                         searchedLocations = searchedLocations.Union(razorPageResult?.SearchedLocations!);
                     }
-                    _logger.LogError($"Failed to render template {viewName} because it was not found. \r\nThe following locations are searched: \r\n{string.Join("\r\n", searchedLocations)}");
-                    throw new TemplateServiceException($"Failed to render template {viewName} because it was not found. \r\nThe following locations are searched: \r\n{string.Join("\r\n", searchedLocations)}");
+                    if (_hostingEnvironment.ContentRootPath != null 
+                        && File.Exists(Path.Combine(_hostingEnvironment.ContentRootPath, viewName)) 
+                        && !IsApplicationRelativePath(viewName))
+                    {
+                        sb.AppendLine($"ViewName requires \"~/\" prefix. Try change the viewName to \"~/{viewName.TrimStart('/')}\"");
+                    }
+                    sb.AppendLine("The following locations are searched:");
+                    sb.AppendLine(string.Join("\r\n", searchedLocations));
+                    _logger.LogError(sb.ToString());
+                    throw new TemplateServiceException(sb.ToString());
                 }
 
                 var viewDictionary = new ViewDataDictionary<TViewModel>(new EmptyModelMetadataProvider(), new ModelStateDictionary());

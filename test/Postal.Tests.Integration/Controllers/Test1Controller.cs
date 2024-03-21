@@ -20,7 +20,7 @@ public class Test1Controller : Controller
 
     public IActionResult SendEmail2()
     {
-        var emailData = new Email("Pages/Emails/Testing2.cshtml");
+        var emailData = new Email("~/Pages/Emails/Testing2.cshtml");
         emailData.ViewData["to"] = "hello@example.com";
         emailData.CaptureHttpContext(HttpContext);
 

@@ -131,6 +131,7 @@ namespace Postal
             var serviceProvider = new Mock<IServiceProvider>();
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
+            hostingEnvironment.SetupGet(e => e.ContentRootPath).Returns("");
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
             var urlHelperFactory = new Mock<IUrlHelperFactory>();
             var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
@@ -165,6 +166,7 @@ namespace Postal
             var serviceProvider = new Mock<IServiceProvider>();
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
+            hostingEnvironment.SetupGet(e => e.ContentRootPath).Returns("");
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
             var urlHelperFactory = new Mock<IUrlHelperFactory>();
             var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
