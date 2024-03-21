@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.WebEncoders.Testing;
@@ -11,6 +13,7 @@ using Moq;
 using Postal.AspNetCore;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -32,6 +35,8 @@ namespace Postal
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
 
             ITemplateService templateService = new TemplateService(
                 logger.Object,
@@ -41,9 +46,10 @@ namespace Postal
                 tempDataProvider.Object,
                 hostingEnvironment.Object,
                 new HtmlTestEncoder(),
-                diagnosticListener
+                diagnosticListener,
+                urlHelperFactory.Object
             );
-            var renderer = new EmailViewRender(templateService);
+            var renderer = new EmailViewRender(templateService, options.Object);
 
             var actualEmailString = await renderer.RenderAsync(new Email("Test"));
 
@@ -68,6 +74,8 @@ namespace Postal
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
 
             ITemplateService templateService = new TemplateService(
                 logger.Object,
@@ -77,9 +85,10 @@ namespace Postal
                 tempDataProvider.Object,
                 hostingEnvironment.Object,
                 new HtmlTestEncoder(),
-                diagnosticListener
+                diagnosticListener,
+                urlHelperFactory.Object
             );
-            var renderer = new EmailViewRender(templateService);
+            var renderer = new EmailViewRender(templateService, options.Object);
 
             var actualEmailString = await renderer.RenderAsync(new Email("~/Views/TestFolder/Test"));
 
@@ -123,6 +132,8 @@ namespace Postal
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
 
             ITemplateService templateService = new TemplateService(
                 logger.Object,
@@ -132,9 +143,10 @@ namespace Postal
                 tempDataProvider.Object,
                 hostingEnvironment.Object,
                 new HtmlTestEncoder(),
-                diagnosticListener
+                diagnosticListener,
+                urlHelperFactory.Object
             );
-            var renderer = new EmailViewRender(templateService);
+            var renderer = new EmailViewRender(templateService, options.Object);
 
             await Assert.ThrowsAsync<TemplateServiceException>(() => renderer.RenderAsync(new Email("Test")));
 
@@ -154,6 +166,8 @@ namespace Postal
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
 
             ITemplateService templateService = new TemplateService(
                 logger.Object,
@@ -163,8 +177,10 @@ namespace Postal
                 tempDataProvider.Object,
                 hostingEnvironment.Object,
                 new HtmlTestEncoder(),
-                diagnosticListener
-            ); var renderer = new EmailViewRender(templateService);
+                diagnosticListener,
+                urlHelperFactory.Object
+            );
+            var renderer = new EmailViewRender(templateService, options.Object);
 
             await Assert.ThrowsAsync<TemplateServiceException>(() => renderer.RenderAsync(new Email("~/Views/TestFolder/Test")));
 
@@ -175,7 +191,8 @@ namespace Postal
         public async Task Render_returns_email_string_with_img_created_by_view()
         {
             var email = new Email("Test");
-            var cid = email.ImageEmbedder.ReferenceImageAsync("https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png");
+            var imageEmbedder = new ImageEmbedder();
+            var cid = await imageEmbedder.ReferenceImageAsync("https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png");
 
             var mvcViewOptions = new Mock<Microsoft.Extensions.Options.IOptions<MvcViewOptions>>();
 
@@ -183,7 +200,11 @@ namespace Postal
             //ICompositeViewEngine engine = new CompositeViewEngine(mvcViewOptions.Object);
 
             var viewEngine = new Mock<IRazorViewEngine>();
-            var view = new FakeView(_ => _.ViewData[ImageEmbedder.ViewDataKey] != null ? "True" : "False");
+            var view = new FakeView(_ =>
+            {
+                _.ViewData[ImageEmbedder.ViewDataKey].ShouldBe(imageEmbedder);
+                return _.ViewData[ImageEmbedder.ViewDataKey] != null ? "True" : "False";
+            });
             viewEngine.Setup(e => e.FindView(It.IsAny<ActionContext>(), "Test", It.IsAny<bool>()))
                        .Returns(ViewEngineResult.Found("Test", view)).Verifiable();
 
@@ -193,6 +214,8 @@ namespace Postal
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
 
             ITemplateService templateService = new TemplateService(
                 logger.Object,
@@ -202,10 +225,12 @@ namespace Postal
                 tempDataProvider.Object,
                 hostingEnvironment.Object,
                 new HtmlTestEncoder(),
-                diagnosticListener
-            ); var renderer = new EmailViewRender(templateService);
+                diagnosticListener,
+                urlHelperFactory.Object
+            );
+            var renderer = new EmailViewRender(templateService, options.Object);
 
-            var actualEmailString = await renderer.RenderAsync(email);
+            var actualEmailString = await renderer.RenderAsync(email, null, imageEmbedder);
 
             actualEmailString.ShouldBe("True");
 
@@ -216,7 +241,8 @@ namespace Postal
         public async Task Render_returns_email_string_with_img_created_by_view_retrievepath()
         {
             var email = new Email("~/Views/TestFolder/Test");
-            var cid = email.ImageEmbedder.ReferenceImageAsync("https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png");
+
+            var imageEmbedder = new ImageEmbedder();
 
             var mvcViewOptions = new Mock<Microsoft.Extensions.Options.IOptions<MvcViewOptions>>();
 
@@ -234,6 +260,8 @@ namespace Postal
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
 
             ITemplateService templateService = new TemplateService(
                 logger.Object,
@@ -243,10 +271,13 @@ namespace Postal
                 tempDataProvider.Object,
                 hostingEnvironment.Object,
                 new HtmlTestEncoder(),
-                diagnosticListener
-            ); var renderer = new EmailViewRender(templateService);
+                diagnosticListener,
+                urlHelperFactory.Object
+            );
+            var renderer = new EmailViewRender(templateService, options.Object);
 
-            var actualEmailString = await renderer.RenderAsync(email);
+            var cid = await imageEmbedder.ReferenceImageAsync("https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png");
+            var actualEmailString = await renderer.RenderAsync(email, null, imageEmbedder);
 
             actualEmailString.ShouldBe("True");
 
@@ -267,6 +298,8 @@ namespace Postal
             var tempDataProvider = new Mock<ITempDataProvider>();
             var hostingEnvironment = new Mock<IWebHostEnvironment>();
             var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = new Mock<Microsoft.Extensions.Options.IOptions<EmailServiceOptions>>();
 
             ITemplateService templateService = new TemplateService(
                 logger.Object,
@@ -276,14 +309,53 @@ namespace Postal
                 tempDataProvider.Object,
                 hostingEnvironment.Object,
                 new HtmlTestEncoder(),
-                diagnosticListener
-            ); var renderer = new EmailViewRender(templateService);
+                diagnosticListener,
+                urlHelperFactory.Object
+            );
+            var renderer = new EmailViewRender(templateService, options.Object);
 
             var actualEmailString = await renderer.RenderAsync(new Email("Test"));
 
             actualEmailString.ShouldBe("Fake");
 
             viewEngine.Verify();
+        }
+
+        [Fact]
+        public async Task Render_with_correct_emailviewdir()
+        {
+            var email = new Email("Test");
+
+            var mvcViewOptions = new Mock<Microsoft.Extensions.Options.IOptions<MvcViewOptions>>();
+
+            RouteData actualRouteData = null;
+
+            var templateService = new Mock<ITemplateService>();
+            templateService.Setup(e => e.RenderTemplateAsync(It.IsAny<RouteData>(), "Test", It.IsAny<Email>(), It.IsAny<Dictionary<string, object?>>(), true))
+                .Callback<RouteData, string, Email, Dictionary<string, object?>, bool>((r, s, em, dict, b) =>
+                {
+                    actualRouteData = r;
+                })
+                .Returns(Task.FromResult("abcdefgh")).Verifiable();
+
+            var logger = new Mock<ILogger<TemplateService>>();
+            var razorPageActivator = new Mock<IRazorPageActivator>();
+            var serviceProvider = new Mock<IServiceProvider>();
+            var tempDataProvider = new Mock<ITempDataProvider>();
+            var hostingEnvironment = new Mock<IWebHostEnvironment>();
+            var diagnosticListener = new System.Diagnostics.DiagnosticListener("Postal.Tests");
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            var options = Microsoft.Extensions.Options.Options.Create<EmailServiceOptions>(new EmailServiceOptions() { EmailViewsDirectory = "TestingDir321" });
+
+            var renderer = new EmailViewRender(templateService.Object, options);
+
+            var actualEmailString = await renderer.RenderAsync(email, null, null);
+
+            actualEmailString.ShouldBe("abcdefgh");
+            actualRouteData.ShouldBeAssignableTo<RouteData>();
+            actualRouteData.Values.ShouldContainKeyAndValue("controller", "TestingDir321");
+
+            templateService.Verify();
         }
     }
 }

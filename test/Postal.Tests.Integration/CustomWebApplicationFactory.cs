@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 
 namespace Postal.Tests.Integration;
 
@@ -7,6 +8,7 @@ public class CustomWebApplicationFactory<TProgram>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseContentRoot(AppContext.BaseDirectory);
+        //builder.UseContentRoot(AppContext.BaseDirectory);
+        //builder.UseSolutionRelativeContentRoot()
     }
 }

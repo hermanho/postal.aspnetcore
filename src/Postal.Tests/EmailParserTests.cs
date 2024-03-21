@@ -28,7 +28,8 @@ Subject: Test Subject
 Hello, World!";
             var renderer = new Mock<IEmailViewRender>();
             var parser = new EmailParser(renderer.Object);
-            using (var message = await parser.ParseAsync(input, new Email("Test")))
+            var imageEmbedder = new Mock<ImageEmbedder>();
+            using (var message = await parser.ParseAsync(input, new Email("Test"), imageEmbedder.Object))
             {
                 message.To[0].Address.ShouldBe("test1@test.com");
                 message.From.Address.ShouldBe("test2@test.com");
@@ -56,7 +57,8 @@ Subject: Test Subject
 Hello, World!";
             var renderer = new Mock<IEmailViewRender>();
             var parser = new EmailParser(renderer.Object);
-            using (var message = await parser.ParseAsync(input, new Email("Test")))
+            var imageEmbedder = new Mock<ImageEmbedder>();
+            using (var message = await parser.ParseAsync(input, new Email("Test"), imageEmbedder.Object))
             {
                 message.To[0].Address.ShouldBe("test1@test.com");
                 message.To[0].DisplayName.ShouldBe("John H Smith");
@@ -78,7 +80,8 @@ Subject: Test Subject
 Hello, World!";
             var renderer = new Mock<IEmailViewRender>();
             var parser = new EmailParser(renderer.Object);
-            using (var message = await parser.ParseAsync(input, new Email("Test")))
+            var imageEmbedder = new Mock<ImageEmbedder>();
+            using (var message = await parser.ParseAsync(input, new Email("Test"), imageEmbedder.Object))
             {
                 message.CC[0].Address.ShouldBe("test3@test.com");
                 message.CC[1].Address.ShouldBe("test4@test.com");
@@ -98,7 +101,8 @@ Subject: Test Subject
 Hello, World!";
             var renderer = new Mock<IEmailViewRender>();
             var parser = new EmailParser(renderer.Object);
-            using (var message = await parser.ParseAsync(input, new Email("Test")))
+            var imageEmbedder = new Mock<ImageEmbedder>();
+            using (var message = await parser.ParseAsync(input, new Email("Test"), imageEmbedder.Object))
             {
                 message.CC[0].Address.ShouldBe("test3@test.com");
                 message.CC[1].Address.ShouldBe("test4@test.com");
@@ -118,7 +122,8 @@ Subject: Test Subject
 <p>Hello, World!</p>";
             var renderer = new Mock<IEmailViewRender>();
             var parser = new EmailParser(renderer.Object);
-            using (var message = await parser.ParseAsync(input, new Email("Test")))
+            var imageEmbedder = new Mock<ImageEmbedder>();
+            using (var message = await parser.ParseAsync(input, new Email("Test"), imageEmbedder.Object))
             {
                 message.Body.ShouldBe("<p>Hello, World!</p>");
                 message.IsBodyHtml.ShouldBeTrue();
@@ -146,6 +151,36 @@ Subject: Test Subject
         }
 
         [Fact]
+        public async Task Same_image_embedder_in_life_cycle()
+        {
+            var input = @"
+To: test1@test.com
+From: test2@test.com
+Subject: Test Subject
+Views: Html
+
+<p>Hello, World!</p>";
+            var html = @"Content-Type: text/html
+
+<p>Hello, World!</p>";
+
+            var email = new Email("Test");
+            var renderer = new Mock<IEmailViewRender>();
+            var imageEmbedder = new Mock<ImageEmbedder>();
+
+            renderer.Setup(r => r.RenderAsync(email, "Test.Html", imageEmbedder.Object))
+                .Returns(Task.FromResult(html));
+
+            var parser = new EmailParser(renderer.Object);
+            using (var message = await parser.ParseAsync(input, email, imageEmbedder.Object))
+            {
+            }
+            renderer.Verify(m => m.RenderAsync(email, It.IsAny<string>(), It.IsAny<ImageEmbedder>()), Times.Once);
+            renderer.Verify();
+        }
+
+
+        [Fact]
         public async Task Alternative_views_are_added_to_MailMessage()
         {
             var input = @"
@@ -162,8 +197,8 @@ Hello, World!";
 
             var email = new Email("Test");
             var renderer = new Mock<IEmailViewRender>();
-            renderer.Setup(r => r.RenderAsync(email, "Test.Text")).Returns(Task.FromResult(text));
-            renderer.Setup(r => r.RenderAsync(email, "Test.Html")).Returns(Task.FromResult(html));
+            renderer.Setup(r => r.RenderAsync(email, "Test.Text", null)).Returns(Task.FromResult(text));
+            renderer.Setup(r => r.RenderAsync(email, "Test.Html", null)).Returns(Task.FromResult(html));
 
             var parser = new EmailParser(renderer.Object);
             using (var message = await parser.ParseAsync(input, email))
@@ -196,8 +231,8 @@ Hello, World!";
 
             var email = new Email("~/Views/Emails/Test.cshtml");
             var renderer = new Mock<IEmailViewRender>();
-            renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Text.cshtml")).Returns(Task.FromResult(text));
-            renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Html.cshtml")).Returns(Task.FromResult(html));
+            renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Text.cshtml", null)).Returns(Task.FromResult(text));
+            renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Html.cshtml", null)).Returns(Task.FromResult(html));
 
             var parser = new EmailParser(renderer.Object);
             using (var message = await parser.ParseAsync(input, email))
@@ -247,8 +282,8 @@ Hello, World!";
 
             var email = new Email("Test");
             var renderer = new Mock<IEmailViewRender>();
-            renderer.Setup(r => r.RenderAsync(email, "Test.Text")).Returns(Task.FromResult(text));
-            renderer.Setup(r => r.RenderAsync(email, "Test.Html")).Returns(Task.FromResult(html));
+            renderer.Setup(r => r.RenderAsync(email, "Test.Text", null)).Returns(Task.FromResult(text));
+            renderer.Setup(r => r.RenderAsync(email, "Test.Html", null)).Returns(Task.FromResult(html));
 
             var parser = new EmailParser(renderer.Object);
             using (var message = await parser.ParseAsync(input, email))
@@ -268,6 +303,7 @@ Hello, World!";
             var parser = new EmailParser(Mock.Of<IEmailViewRender>());
             using (var message = await parser.ParseAsync("body", (Email)email))
             {
+                message.To.ShouldHaveSingleItem();
                 message.To[0].Address.ShouldBe("test@test.com");
             }
         }

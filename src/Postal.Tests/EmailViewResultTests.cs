@@ -54,9 +54,9 @@ namespace Postal
 
             renderer.Setup(r => r.RenderAsync(email)).Returns(Task.FromResult(template));
             if (!string.IsNullOrEmpty(textTemplate))
-                renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Text.cshtml")).Returns(Task.FromResult(textTemplate));
+                renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Text.cshtml", null)).Returns(Task.FromResult(textTemplate));
             if (!string.IsNullOrEmpty(htmlTemplate))
-                renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Html.cshtml")).Returns(Task.FromResult(htmlTemplate));
+                renderer.Setup(r => r.RenderAsync(email, "~/Views/Emails/Test.Html.cshtml", null)).Returns(Task.FromResult(htmlTemplate));
 
             return renderer.Object;
         }
