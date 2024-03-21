@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.0.0](https://github.com/hermanho/postal.aspnetcore/compare/v3.1.0...v4.0.0) (2024-03-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Update CICD to .Net 7, .Net 8
+
+### Features
+
+* compatible to Hangfire and Json.Net, fix [#28](https://github.com/hermanho/postal.aspnetcore/issues/28) ([b99849f](https://github.com/hermanho/postal.aspnetcore/commit/b99849f3e241b2083cd6ca365484abdc19d17c0d))
+* Support .Net 7, .Net  8 ([fedf6b9](https://github.com/hermanho/postal.aspnetcore/commit/fedf6b92b76d621bfa9c0bc45bc54078a4739f3d))
+* Update CICD to .Net 7, .Net 8 ([d354dde](https://github.com/hermanho/postal.aspnetcore/commit/d354ddee84a6c96d848e7c68283c53c0377cb104))
+
+
+### Bug Fixes
+
+* test files ([85100fc](https://github.com/hermanho/postal.aspnetcore/commit/85100fcb12272142175ac51ad7f505f98654b542))
+
 ## [3.1.0](https://github.com/hermanho/postal.aspnetcore/compare/Postal.AspNetCore-v3.0.0...Postal.AspNetCore-v3.1.0) (2023-09-14)
 
 
