@@ -4,7 +4,7 @@
     <VersionPrefix>3.1.0</VersionPrefix>
   </PropertyGroup>
   <PropertyGroup>
-    <TODAY>$([System.DateTime]::Now.ToString("yyyyMMdd-hhmmss"))</TODAY>
+    <TODAY>$([System.DateTime]::Now.ToString("yyyyMMdd"))</TODAY>
     <InformationalVersion Condition=" '$(SHORT_SHA)' != '' ">$(InformationalVersion)git:$(SHORT_SHA)</InformationalVersion>
   </PropertyGroup>  
   <Choose>
@@ -25,7 +25,7 @@
         <!-- append the build number if it is available -->
         <VersionSuffix Condition=" '$(GITHUB_RUN_NUMBER)' != '' ">$(VersionSuffix)$(GITHUB_RUN_NUMBER)</VersionSuffix>
         <VersionSuffix Condition=" '$(SHORT_SHA)' != '' ">$(VersionSuffix)-$(SHORT_SHA)</VersionSuffix>
-        <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">build$(TODAY)</VersionSuffix>
+        <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">build-$(TODAY)</VersionSuffix>
       </PropertyGroup>
     </Otherwise>
   </Choose>
