@@ -15,10 +15,10 @@ namespace Postal.AspNetCore
     {
         private const string TextContentType = "text/plain";
         private const string HtmlContentType = "text/html";
-        private static readonly Action<ILogger, string, Exception> _emailViewResultExecuting = LoggerMessage.Define<string>(
+        private static readonly Action<ILogger, Exception?> _emailViewResultExecuting = LoggerMessage.Define(
              LogLevel.Information,
                  1,
-                 "Executing EmailViewResult with HTTP Response ContentType of {ContentType}");
+                 "Executing EmailViewResult");
 
         private const string DefaultContentType = "text/html; charset=utf-8";
         private readonly ILogger<EmailViewResultExecutor> _logger;
@@ -30,7 +30,7 @@ namespace Postal.AspNetCore
         public EmailViewResultExecutor(ILoggerFactory loggerFactory,
             IHttpResponseStreamWriterFactory writerFactory,
             IEmailViewRender render,
-            IEmailParser parser = null)
+            IEmailParser? parser = null)
         {
             _logger = loggerFactory.CreateLogger<EmailViewResultExecutor>();
             _writerFactory = writerFactory;
@@ -57,7 +57,7 @@ namespace Postal.AspNetCore
                 response.StatusCode = result.StatusCode.Value;
             }
 
-            _emailViewResultExecuting(_logger, response.ContentType, null);
+            _emailViewResultExecuting(_logger, null);
 
             var httpContext = context.HttpContext;
             var requestFeature = httpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpRequestFeature>();
@@ -80,7 +80,7 @@ namespace Postal.AspNetCore
         /// Writes the email preview in the given format.
         /// </summary>
         /// <returns>The content type for the HTTP response.</returns>
-        internal async Task<string> WriteEmailAsync(Email email, TextWriter writer, string format = null)
+        internal async Task<string> WriteEmailAsync(Email email, TextWriter writer, string? format = null)
         {
             var result = await Render.RenderAsync(email);
             var mailMessage = await Parser.ParseAsync(result, email);
@@ -172,7 +172,7 @@ namespace Postal.AspNetCore
         }
 
 
-        static string CheckAlternativeViews(TextWriter writer, MailMessage mailMessage, string format)
+        static string? CheckAlternativeViews(TextWriter writer, MailMessage mailMessage, string format)
         {
             var contentType = format == "html"
                 ? HtmlContentType

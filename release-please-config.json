@@ -3,7 +3,7 @@
     ".": {
       "package-name": "Postal.AspNetCore",
       "release-type": "simple",
-      "prerelease": false,
+      "prerelease": true,
       "include-component-in-tag": false,
       "extra-files": [
         {

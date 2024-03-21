@@ -15,6 +15,7 @@ namespace Postal
         /// <param name="viewName">Optional, the name of the view. If null, the ViewName of the email will be used.</param>
         /// <returns>The string result of rendering the email.</returns>
         Task<string> RenderAsync(Email email);
-        Task<string> RenderAsync(Email email, string viewName = null);
+        Task<string> RenderAsync(Email email, string? viewName = null);
+        Task<string> RenderAsync(Email email, string? viewName = null, ImageEmbedder? ImageEmbedder = null);
     }
 }

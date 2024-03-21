@@ -66,13 +66,6 @@ namespace Postal
         }
 
         [Fact]
-        public void Derived_Email_sets_ViewData_Model()
-        {
-            var email = new TestEmail();
-            email.ViewData.Model.ShouldBeSameAs(email);
-        }
-
-        [Fact]
         public void Derived_Email_sets_ViewName_from_class_name()
         {
             var email = new TestEmail();

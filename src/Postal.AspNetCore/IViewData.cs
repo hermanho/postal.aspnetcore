@@ -7,7 +7,7 @@ namespace Postal.AspNetCore
 {
     public interface IViewData
     {
-        ViewDataDictionary ViewData { get; set; }
+        Dictionary<string, object> ViewData { get; set; }
         RequestPath RequestPath { get; set; }
     }
 }

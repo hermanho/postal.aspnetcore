@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.WebEncoders.Testing;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Postal
 {
@@ -34,7 +35,7 @@ Subject: Test Subject
 <p>Hello, World!</p>";
             var email = new Email("Test");
             var renderer = new Mock<IEmailViewRender>();
-            renderer.Setup(r => r.RenderAsync(email)).Returns(Task.FromResult(html));
+            renderer.Setup(r => r.RenderAsync(email, null, It.IsAny<ImageEmbedder>())).Returns(Task.FromResult(html));
             var parser = new Mock<IEmailParser>();
             var emailOptions = new EmailServiceOptions();
             emailOptions.CreateSmtpClient = () => null;
@@ -43,7 +44,7 @@ Subject: Test Subject
             var logger = new Mock<ILogger<EmailService>>();
             var service = new EmailService(renderer.Object, parser.Object, options.Object, logger.Object);
             var expectedMailMessage = new MailMessage();
-            parser.Setup(p => p.ParseAsync(It.IsAny<string>(), email)).Returns(Task.FromResult(expectedMailMessage));
+            parser.Setup(p => p.ParseAsync(It.IsAny<string>(), email, null)).Returns(Task.FromResult(expectedMailMessage));
 
             var actualMailMessage = await service.CreateMailMessageAsync(email);
 
@@ -55,7 +56,7 @@ Subject: Test Subject
         }
 
         [Fact]
-        public void SendAync_returns_a_Task_and_sends_email()
+        public async Task SendAync_returns_a_Task_and_sends_email()
         {
             var html = @"Content-Type: text/html
 To: test1@test.com
@@ -75,7 +76,8 @@ Subject: Test Subject
 
                     var email = new Email("Test");
                     var renderer = new Mock<IEmailViewRender>();
-                    renderer.Setup(r => r.RenderAsync(email)).Returns(Task.FromResult(html));
+                    var imageEmbedder = new Mock<ImageEmbedder>();
+                    renderer.Setup(r => r.RenderAsync(email, null, It.IsAny<ImageEmbedder>())).Returns(Task.FromResult(html));
                     var emailOptions = new EmailServiceOptions();
                     emailOptions.CreateSmtpClient = () => smtp;
                     var options = new Mock<IOptions<EmailServiceOptions>>();
@@ -83,11 +85,11 @@ Subject: Test Subject
                     var parser = new Mock<IEmailParser>();
                     var logger = new Mock<ILogger<EmailService>>();
                     var service = new EmailService(renderer.Object, parser.Object, options.Object, logger.Object);
-                    parser.Setup(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<Email>()))
+                    parser.Setup(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<Email>(), null))
                           .Returns(Task.FromResult(new MailMessage("test@test.com", "test@test.com")));
 
                     var sending = service.SendAsync(email);
-                    sending.Wait();
+                    await sending;
 
                     Directory.GetFiles(dir).Length.ShouldBe(1);
                     parser.Verify();
@@ -111,6 +113,7 @@ Subject: Test Subject
             var razorPageActivator = new Mock<IRazorPageActivator>();
             var logger = new Mock<ILogger<EmailService>>();
             var logger2 = new Mock<ILogger<TemplateService>>();
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
             serviceCollection.AddSingleton(logger.Object);
             serviceCollection.AddSingleton(logger2.Object);
             serviceCollection.AddSingleton(viewEngine.Object);
@@ -120,6 +123,7 @@ Subject: Test Subject
             serviceCollection.AddSingleton(razorPageActivator.Object);
             serviceCollection.AddSingleton<HtmlEncoder>(new HtmlTestEncoder());
             serviceCollection.AddSingleton(new System.Diagnostics.DiagnosticListener("Postal.Tests"));
+            serviceCollection.AddSingleton(urlHelperFactory.Object);
 
             serviceCollection.AddPostal();
 
@@ -154,6 +158,7 @@ Subject: Test Subject
             var razorPageActivator = new Mock<IRazorPageActivator>();
             var logger = new Mock<ILogger<EmailService>>();
             var logger2 = new Mock<ILogger<TemplateService>>();
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
             serviceCollection.AddSingleton(logger.Object);
             serviceCollection.AddSingleton(logger2.Object); serviceCollection.AddSingleton(viewEngine.Object);
             serviceCollection.AddSingleton(viewEngine.Object);
@@ -163,6 +168,7 @@ Subject: Test Subject
             serviceCollection.AddSingleton(razorPageActivator.Object);
             serviceCollection.AddSingleton<HtmlEncoder>(new HtmlTestEncoder());
             serviceCollection.AddSingleton(new System.Diagnostics.DiagnosticListener("Postal.Tests"));
+            serviceCollection.AddSingleton(urlHelperFactory.Object);
 
             serviceCollection.Configure<EmailServiceOptions>(_configuration);
             serviceCollection.AddPostal();
@@ -197,6 +203,8 @@ Subject: Test Subject
             var razorPageActivator = new Mock<IRazorPageActivator>();
             var logger = new Mock<ILogger<EmailService>>();
             var logger2 = new Mock<ILogger<TemplateService>>();
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
+            serviceCollection.AddSingleton<HtmlEncoder>(new HtmlTestEncoder());
             serviceCollection.AddSingleton(logger.Object);
             serviceCollection.AddSingleton(logger2.Object);
             serviceCollection.AddSingleton(viewEngine.Object);
@@ -206,6 +214,7 @@ Subject: Test Subject
             serviceCollection.AddSingleton(razorPageActivator.Object);
             serviceCollection.AddSingleton<HtmlEncoder>(new HtmlTestEncoder());
             serviceCollection.AddSingleton(new System.Diagnostics.DiagnosticListener("Postal.Tests"));
+            serviceCollection.AddSingleton(urlHelperFactory.Object);
 
             serviceCollection.Configure<EmailServiceOptions>(o =>
             {
@@ -228,12 +237,12 @@ Subject: Test Subject
             emailOptionField.FromAddress.ShouldBe("qwerty");
             emailOptionField.UserName.ShouldBe("zxcvbn");
             emailOptionField.Password.ShouldBe("asdfgh");
-            
+
             emailOptionField.CreateSmtpClient().ShouldBeOfType<FactExcetpionForSmtpClient>();
         }
 
         [Fact]
-        public void Dependency_injection_smtpOtions3()
+        public async Task Dependency_injection_smtpOtions3()
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddOptions();
@@ -243,6 +252,7 @@ Subject: Test Subject
             var razorPageActivator = new Mock<IRazorPageActivator>();
             var logger = new Mock<ILogger<EmailService>>();
             var logger2 = new Mock<ILogger<TemplateService>>();
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
             serviceCollection.AddSingleton(logger.Object);
             serviceCollection.AddSingleton(logger2.Object);
             serviceCollection.AddSingleton(viewEngine.Object);
@@ -252,6 +262,7 @@ Subject: Test Subject
             serviceCollection.AddSingleton(razorPageActivator.Object);
             serviceCollection.AddSingleton<HtmlEncoder>(new HtmlTestEncoder());
             serviceCollection.AddSingleton(new System.Diagnostics.DiagnosticListener("Postal.Tests"));
+            serviceCollection.AddSingleton(urlHelperFactory.Object);
 
             serviceCollection.Configure<EmailServiceOptions>(o =>
             {
@@ -263,13 +274,13 @@ Subject: Test Subject
             var services = serviceCollection.BuildServiceProvider();
             var emailService = services.GetRequiredService<IEmailService>();
 
-            Assert.ThrowsAsync<FactExcetpionForSmtpCreation>(() => emailService.SendAsync(new Email("testView")));
+            await Assert.ThrowsAsync<FactExcetpionForSmtpCreation>(() => emailService.SendAsync(new MailMessage()));
             EmailServiceOptions emailOptionField = GetInstanceField(typeof(EmailService), emailService, "options") as EmailServiceOptions;
             Assert.Throws<FactExcetpionForSmtpCreation>(() => emailOptionField.CreateSmtpClient());
         }
 
         [Fact]
-        public void Dependency_injection_generic_host()
+        public async Task Dependency_injection_generic_host()
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddOptions();
@@ -279,14 +290,16 @@ Subject: Test Subject
             var razorPageActivator = new Mock<IRazorPageActivator>();
             var logger = new Mock<ILogger<EmailService>>();
             var logger2 = new Mock<ILogger<TemplateService>>();
+            var urlHelperFactory = new Mock<IUrlHelperFactory>();
             serviceCollection.AddSingleton(logger.Object);
-            serviceCollection.AddSingleton(logger2.Object); 
+            serviceCollection.AddSingleton(logger2.Object);
             serviceCollection.AddSingleton(viewEngine.Object);
             serviceCollection.AddSingleton(tempDataProvider.Object);
             serviceCollection.AddSingleton(hostingEnvironment.Object);
             serviceCollection.AddSingleton(razorPageActivator.Object);
             serviceCollection.AddSingleton<HtmlEncoder>(new HtmlTestEncoder());
             serviceCollection.AddSingleton(new System.Diagnostics.DiagnosticListener("Postal.Tests"));
+            serviceCollection.AddSingleton(urlHelperFactory.Object);
 
             serviceCollection.Configure<EmailServiceOptions>(o =>
             {
@@ -298,7 +311,7 @@ Subject: Test Subject
             var services = serviceCollection.BuildServiceProvider();
             var emailService = services.GetRequiredService<IEmailService>();
 
-            Assert.ThrowsAsync<FactExcetpionForSmtpCreation>(() => emailService.SendAsync(new Email("testView")));
+            await Assert.ThrowsAsync<FactExcetpionForSmtpCreation>(() => emailService.SendAsync(new MailMessage()));
             EmailServiceOptions emailOptionField = GetInstanceField(typeof(EmailService), emailService, "options") as EmailServiceOptions;
             Assert.Throws<FactExcetpionForSmtpCreation>(() => emailOptionField.CreateSmtpClient());
         }

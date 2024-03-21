@@ -32,12 +32,14 @@ namespace Postal.AspNetCore
             };
         }
 
-        public string Host { get; set; }
+        public string Host { get; set; } = string.Empty;
         public int? Port { get; set; }
         public bool EnableSSL { get; set; }
-        public string FromAddress { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string? FromAddress { get; set; } = null;
+        public string? UserName { get; set; } = null;
+        public string? Password { get; set; } = null;
+        public string EmailViewsDirectory { get; set; } = "Emails";
+        public TransferEncoding? BodyTransferEncoding { get; set; }
 
         public Func<SmtpClient> CreateSmtpClient { get; set; }
     }
